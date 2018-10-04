@@ -483,15 +483,3 @@ class GalaxyProcessor(object):
         features = np.append(features, color_histogram)
 
         return features
-
-    def get_ratio_aspect(self):
-        img = cv2.imread(self._image_path,0)
-        ret,thresh = cv2.threshold(img,127,255,0)
-        im2,contours,hierarchy = cv2.findContours(thresh, 1, 2)
-        cnt = contours[0]
-        rect = cv.minAreaRect(cnt)
-        box = cv.boxPoints(rect)
-        box = np.int0(box)
-        cv.drawContours(img,[box],0,(0,0,255),2)
-        print("Aspect ratio = " + rect)
-        return rect
