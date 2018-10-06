@@ -6,13 +6,14 @@ Course :
     GTI770 — Systèmes intelligents et apprentissage machine
 
 Project :
-    Lab # X - Lab's name
+    Lab # 1 - Définition et extraction de primitives
 
 Students :
+    LEMARCHANT HUGO - AP85480
     Names — Permanent Code
 
 Group :
-    GTI770-H18-0X
+    GTI770-A18-0C
 """
 
 import csv
@@ -65,8 +66,6 @@ class GalaxyProcessor(object):
             feature_vector = self.get_features(file, sample[0], label[0])
             features.append(feature_vector)
 
-
-
         return features
 
     def load_image(self, filepath):
@@ -103,7 +102,7 @@ class GalaxyProcessor(object):
         Apply a gaussian filter on an image.
 
         Args:
-            image: an OpenCV standard image format. 
+            image: an OpenCV standard image format.
             kernel_width: the kernel width of the filter.
             kernel_height: the kernel height of the filter.
 
@@ -115,13 +114,13 @@ class GalaxyProcessor(object):
     def rescale(self, image, min=0, max=255):
         """ Rescale the colors of an image.
 
-        Utility method to rescale colors from an image. 
+        Utility method to rescale colors from an image.
 
-        Args: 
+        Args:
             image: an OpenCV standard image format.
             min: The minimum color value [0, 255] range.
             max: The maximum color value [0, 255] range.
-        
+
         Returns:
             The image with rescaled colors.
         """
@@ -133,9 +132,9 @@ class GalaxyProcessor(object):
         return image
 
     def saturate(self, image, q0=0.01, q1=0.99):
-        """ Stretch contrasts of an image. 
-        
-        Utility method to saturate the contrast of an image. 
+        """ Stretch contrasts of an image.
+
+        Utility method to saturate the contrast of an image.
 
         Args:
             image: an OpenCV standard image format.
@@ -143,7 +142,7 @@ class GalaxyProcessor(object):
             q1: maximum coefficient.
 
         Returns:
-            The image with saturated contrasts. 
+            The image with saturated contrasts.
         """
         image = image.astype('float')
         if q0 is None:
@@ -166,7 +165,7 @@ class GalaxyProcessor(object):
             labels: image labels.
             nb_labels: number of image labels.
 
-        Returns: 
+        Returns:
             A thresholded image of the largest connected component.
         """
         sizes = np.bincount(labels.flatten(),
@@ -188,11 +187,11 @@ class GalaxyProcessor(object):
         return thresholded
 
     def recenter(self, image, x, y, interpolation=cv2.INTER_LINEAR):
-        """ Recenter an image. 
+        """ Recenter an image.
 
         Recenter an image around x and y.
 
-        Args: 
+        Args:
             image: an OpenCV standard image format.
             x: integer representing an "X" coordinate.
             y: integer representing an "Y" coordinate.
@@ -214,10 +213,10 @@ class GalaxyProcessor(object):
 
     def compose(self, matrix1, matrix2):
         """ Composes affine transformations.
-        
+
         Compute the resulting transformation matrix based on two supplied transformation matrix.
 
-        Args: 
+        Args:
             matrix1: The first matrix transform.
             matrix2: The second matrix transform.
 
@@ -236,7 +235,7 @@ class GalaxyProcessor(object):
         """ Rotate an image.
 
         Rotate an image by an angle in degrees around specific point.
-        
+
         Source : http://stackoverflow.com/questions/9041681/opencv-python-rotate-image-by-x-degrees-around-specific-point
 
         Args:
@@ -244,7 +243,7 @@ class GalaxyProcessor(object):
             x: integer representing an "X" coordinate
             y: integer representing an "Y" coordinate.
             angle: the angle of rotation.
-            interpolation: interpolation method. 
+            interpolation: interpolation method.
 
         Returns:
             The rotated image.
@@ -269,10 +268,10 @@ class GalaxyProcessor(object):
 
     def random_colors(self, labels):
         """ Color with random colors components in an image.
-        
-        For debug purpose. 
 
-        Args: 
+        For debug purpose.
+
+        Args:
             labels: some image labels.
 
         Returns:
@@ -289,17 +288,17 @@ class GalaxyProcessor(object):
     def fit_ellipse(self, points, factor=1.96):
         """  Fit points to ellipse.
 
-        Fit an ellips to points passed in parameters. 
-        
+        Fit an ellips to points passed in parameters.
+
         Theorical source : http://en.wikipedia.org/wiki/1.96
 
         Args:
-            points: image points. 
+            points: image points.
             factor: the 1.96 factor in order to contain 95% of the galaxy.
 
         Returns:
             The center of the ellipse, the singular values, and the angle.
-        
+
         """
         points = points.astype('float')
         center = points.mean(axis=0)
@@ -339,13 +338,13 @@ class GalaxyProcessor(object):
     def get_entropy(self, image):
         """ Get the image's entropy.
 
-        Entrpy is a scalar value representing the entropy of grayscale image.
-        Entropy is a statistical measure of randomness that can be used to characterize 
+        Entropy is a scalar value representing the entropy of grayscale image.
+        Entropy is a statistical measure of randomness that can be used to characterize
         the texture of the input image.
 
         Source : http://stackoverflow.com/questions/16647116/faster-way-to-analyze-each-sub-window-in-an-image
 
-        Args: 
+        Args:
             image: an OpenCV standard image format.
 
         Returns:
@@ -482,5 +481,5 @@ class GalaxyProcessor(object):
         color_histogram = self.get_color_histogram(img_color=img_color)
 
         features = np.append(features, color_histogram)
-        
+
         return features
