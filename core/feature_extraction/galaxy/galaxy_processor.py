@@ -470,7 +470,7 @@ class GalaxyProcessor(object):
         features = list()
         coherence_threshold = 160**2*0.001
         nb_colors = 64
-        img_color = cv2.imread(self._img_path + img_id + self._exts)
+        img_color = cv2.imread(self._img_path + str(img_id) + self._exts)
         ratio, values  = get_ratio_aspect(img_color)
         circularity = calculateCircularity(img_color)
         alpha, beta = get_ccv(img_color,coherence_threshold,nb_colors)
