@@ -499,7 +499,6 @@ class GalaxyProcessor(object):
         im_color=cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         img=self.crop_image(im_color, 212-80, 212+80)
         (row, col, channels) = img.shape
-        #print('shape : {0},{1},{2}'.format(row, col, channels))
         # blur
         img = cv2.GaussianBlur(img, (3, 3), 0)
         # quantize color
@@ -512,7 +511,6 @@ class GalaxyProcessor(object):
             (ret, th) = cv2.threshold(ch, 127, 255, 0)
             (ret, labeled, stat, centroids) = cv2.connectedComponentsWithStats(th, None,cv2.CC_STAT_AREA, None, connectivity=8)
             # generate ccv
-            print('stat : {0}'.format(stat.shape))
             areas = [[v[4], label_idx] for (label_idx, v) in enumerate(stat)]
             coord = [[v[0], v[1]] for (label_idx, v) in enumerate(stat)]
             # Counting coherent and incoherent pixels
