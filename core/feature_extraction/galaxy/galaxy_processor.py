@@ -503,7 +503,7 @@ class GalaxyProcessor(object):
         # blur
         img = cv2.GaussianBlur(img, (3, 3), 0)
         # quantize color
-        img = QuantizeColor(img, nb_colors)
+        img = quantize_qolor(img, nb_colors)
         bgr = cv2.split(img)
         alpha = np.zeros(nb_colors)
         beta = np.zeros(nb_colors)
