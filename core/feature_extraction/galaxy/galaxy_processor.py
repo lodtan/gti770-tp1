@@ -472,7 +472,7 @@ class GalaxyProcessor(object):
         nb_colors = 64
         img_color = cv2.imread(self._img_path + str(img_id) + self._exts)
         ratio, values  = self.get_ratio_aspect(img_color)
-        circularity = self.calculateCircularity(img_color)
+        circularity = self.calculate_circularity(img_color)
         alpha, beta = self.get_ccv(img_color,coherence_threshold,nb_colors)
         ccv = alpha.tolist()+beta.tolist()
         features = np.append(features,ccv)
