@@ -476,7 +476,11 @@ class GalaxyProcessor(object):
         features = list()
 
         img_color = cv2.imread(filename=image_file)
-
+        ratio, values  = get_ratio_aspect(img_color)
+        circularity = calculateCircularity(img_color)
+        alpha, beta = get_ccv(img_color,160**2*0.001,64)
+        ccv = alpha.tolist()+beta.tolist()
+        attributes.append([img_color, ratio, circularity,ccv])
         # A feature given to student as example. Not used in the following code.
         color_histogram = self.get_color_histogram(img_color=img_color)
 
@@ -485,7 +489,129 @@ class GalaxyProcessor(object):
         return features
 
 
-    def calculateCircularity(img):
+    def get_ccv(self, src,Threshold,N,prt=False):
+
+        def QuantizeColor(img, N=64):
+            div = 256//N
+            rgb = cv2.split(img)
+            quantized_list = []
+            # quantize N colors for each channel
+            for ch in rgb:
+                vf = np.vectorize(lambda x, div: int(x//div)*div)
+                quantized = vf(ch, div)
+                quantized_list.append(quantized.astype(np.uint8))
+            # Merge the channels after quantization
+            d_img = cv2.merge(quantized_list)
+            return d_img
+
+        def plt_display(title,img):
+            print('image: {0} shape: {1}'.format(title,img.shape))
+            plt.imshow(img)
+            plt.title(title)
+            plt.show()
+
+        def ccv_plot(img,alpha,beta,N):
+            X = [x for x in range(N * 2)]
+            Y = alpha.tolist() + beta.tolist()
+            with open('ccv.csv', 'w') as f:
+                f.write(str(Y))
+            im = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+            plt.subplot(2, 1, 1)
+            plt.imshow(im)
+            plt.subplot(2, 1, 2)
+            plt.bar(X, Y, align='center')
+            plt.yscale('log')
+            plt.show()
+
+        img = src.copy()
+        if prt:
+            plt_display('Original image',img)
+
+
+        im_color=cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        img=GP.crop_image(im_color, 212-80, 212+80)
+
+        if prt:
+            plt_display('image cropped 160x160',img)
+        #im_grey=cv2.cvtColor(img.astype("uint8"), cv2.COLOR_BGR2GRAY)
+
+        (row, col, channels) = img.shape
+        #print('shape : {0},{1},{2}'.format(row, col, channels))
+
+        # blur
+        img = cv2.GaussianBlur(img, (3, 3), 0)
+        if prt:
+            plt_display('After blur',img)
+
+        # quantize color
+
+        img = QuantizeColor(img, N)
+        if prt:
+            plt_display('After Quantization',img)
+
+        bgr = cv2.split(img)
+        #print('b={0},g={1},r={2}'.format(len(bgr[0]),len(bgr[1]),len(bgr[2])))
+
+        # bgr = cv2.split(cv2.cvtColor(img, cv2.COLOR_BGR2HSV))
+        alpha = np.zeros(N)
+        beta = np.zeros(N)
+
+        # labeling
+        for (i, ch) in enumerate(bgr):
+            (ret, th) = cv2.threshold(ch, 127, 255, 0)
+
+            if prt:
+                plt_display('after threshold',img)
+
+            (ret, labeled, stat, centroids) = cv2.connectedComponentsWithStats(th, None,cv2.CC_STAT_AREA, None, connectivity=8)
+
+            # generate ccv
+            print('stat : {0}'.format(stat.shape))
+            areas = [[v[4], label_idx] for (label_idx, v) in enumerate(stat)]
+            coord = [[v[0], v[1]] for (label_idx, v) in enumerate(stat)]
+
+            # Counting coherent and incoherent pixels
+            for (a, c) in zip(areas, coord):
+                area_size = a[0]
+                (x, y) = (c[0], c[1])
+
+                if x < ch.shape[1] and y < ch.shape[0]:
+                    bin_idx = int(ch[y, x] // (256 // N))
+                    if area_size >= Threshold:
+                        # COHERENT PIXELS (belong to area > Threshold pixels )
+                        alpha[bin_idx]+= area_size
+                    else:
+                        # INCOHERENT PIXELS (belong to area <= Threshold pixels )
+                        beta[bin_idx]+= area_size
+
+        CCV = alpha.tolist()+beta.tolist()
+        assert(sum(CCV) == im_cropped.size)
+        assert(N == len(alpha) and N == len(beta))
+
+        return (alpha, beta)
+
+    def get_ratio_aspect(self, img):
+        """
+        Calculate the ratio of the bounding revtangle containing the largest contoured element. Most of the time the galaxy.
+
+        args : image read by the cv2.imread function.
+
+        Returns the ratio and the values of width and lenght
+        """
+        crop = 150
+        if not isinstance(img, np.ndarray):
+            return -1, (None, None)
+        img = img[212-crop:212+crop, 212-crop:212+crop]
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        ret,thresh = cv2.threshold(img,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+        im2,contours,hierarchy = cv2.findContours(thresh, 2, 2)
+        cnt = max(contours, key = lambda cnt : len(cnt))
+        rect = cv2.minAreaRect(cnt)
+        ratio = rect[1][0]/(rect[1][1]+0.0000000001)
+        #print("ratio = {}".format(ratio))
+        return ratio, (rect[1][0], rect[1][1])
+
+    def calculate_circularity(self, img):
         """calculateCircularity
         Fonction calculant la circularité d'une image de galaxie grâce à la fonction C = 4pi * A/P2.
 
