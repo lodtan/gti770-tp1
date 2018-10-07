@@ -10,7 +10,7 @@ Project :
 
 Students :
     LEMARCHANT HUGO - AP85480
-    Names — Permanent Code
+    TAN ELODIE - TANE25619607
 
 Group :
     GTI770-A18-0C
@@ -483,3 +483,40 @@ class GalaxyProcessor(object):
         features = np.append(features, color_histogram)
 
         return features
+
+
+    def calculateCircularity(img):
+        """calculateCircularity
+        Fonction calculant la circularité d'une image de galaxie grâce à la fonction C = 4pi * A/P2.
+
+
+        Args:
+            img (int): L'image pour laquelle nous voulons calculer la circularité.
+
+        Returns:
+            circularity: La valeur de retour. Elle est définie entre 0 et 1.
+                        Plus la valeur est proche de 1, plus la galaxie est circulaire.
+
+        """
+
+        log = nd.gaussian_laplace(img, sigma=20)
+        img = img - log
+
+        gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY);
+        ret, thresh = cv2.threshold(gray_img, 0, 255, cv2.THRESH_BINARY+cv2.THRESH_OTSU)
+        kernel = np.ones((3,3),np.uint8)
+        dilation = cv2.dilate(thresh,kernel,iterations = 1)
+
+        # Get moment to calculate area
+        img2, contours, hierarchy = cv2.findContours(thresh, 1, 2)
+        contour = contours[0]
+        M = cv2.moments(contour)
+        area = M['m00']
+
+        #Get perimeter :
+        perimeter = cv2.arcLength(contour,True)
+
+        # Circularity
+        circularity = 4 * math.pi * area / (perimeter**2)
+
+        return circularity

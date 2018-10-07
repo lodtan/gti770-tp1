@@ -115,3 +115,6 @@ data/images/*
 data/csv/galaxy/*
 data/csv/spam/*
 data/csv/music_genre/*
+
+# DS/Store
+.DS_Store
