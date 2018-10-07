@@ -527,9 +527,6 @@ class GalaxyProcessor(object):
                     else:
                         # INCOHERENT PIXELS (belong to area <= Threshold pixels )
                         beta[bin_idx]+= area_size
-        CCV = alpha.tolist()+beta.tolist()
-        assert(sum(CCV) == im_cropped.size)
-        assert(nb_colors == len(alpha) and nb_colors == len(beta))
         return (alpha, beta)
 
     def get_ratio_aspect(self, image):
