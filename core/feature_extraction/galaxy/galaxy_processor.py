@@ -540,9 +540,9 @@ class GalaxyProcessor(object):
         """
         crop = 150
         epsilon = 0.0000000001
+        img = image.copy()
         if not isinstance(img, np.ndarray):
             return -1, (None, None)
-        img = image.copy()
         img = img[212-crop:212+crop, 212-crop:212+crop]
         img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         ret,thresh = cv2.threshold(img,0,255,cv2.THRESH_BINARY+cv2.THRESH_OTSU)
