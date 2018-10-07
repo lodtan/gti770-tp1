@@ -564,7 +564,7 @@ class GalaxyProcessor(object):
 
         """
         img = image.copy()
-        img = GP.crop_image(img, 212-85, 212+85)
+        img = self.crop_image(img, 212-85, 212+85)
         log = nd.gaussian_laplace(img, sigma=20)
         img = img - log
         gray_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY);
