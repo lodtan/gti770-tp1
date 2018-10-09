@@ -467,20 +467,41 @@ class GalaxyProcessor(object):
             features: a feature vector of N dimensions for N features.
         """
 
-        features = list()
-        coherence_threshold = 160**2*0.001
+        coherence_threshold = 160**2*0.01
         nb_colors = 64
         img_color = cv2.imread(self._img_path + str(img_id) + self._exts)
         ratio, values  = self.get_ratio_aspect(img_color)
         circularity = self.calculate_circularity(img_color)
-        alpha, beta = self.get_ccv(img_color,coherence_threshold,nb_colors)
-        ccv = alpha.tolist()+beta.tolist()
-        features = np.append(features,ccv)
-        features = np.append(features, [ratio, circularity])
+        ccv = self.get_ccv(img_color,coherence_threshold,nb_colors)
+        features = np.append([ratio, circularity],ccv)
         return features
 
-
     def get_ccv(self, image, threshold, nb_colors):
+
+        """
+        This feature mark each pixel as belonging to a coherent or incoherent regions.
+        A region R of connected pixels satisfy this rule : For each p1, p2 ∈ R,
+        there exist a path of adjacent pixels from p1, p2
+        (connectedComponentsWithStats is used to retrieve these areas)
+
+        Each pixel is checked for its members to a coherent area/region.
+        Coherent pixels are the pixels belonging an areas of size >= threshold
+        InCoherent pixels are the pixels an areas of size < threshold
+
+        Args:
+            image     : an OpenCV standard color image format.
+            threshold : minimum area size for coherent regions
+            nb_colors : size of the Color space to discretize the image
+
+        Returns:
+
+            The CCV vector of length 2 * nb_colors.
+
+              C1          |        C2    |...|         CN    |       I1          |      I2    |... | IN
+        nb coherent pix   |              |   |               |nb incoherent pix  |            |    |
+        for color1        | for color2   |   | for colorN    |for color1         |for color2  |    |for colorN
+
+        """
 
         def quantize_color(img, nb_colors=64):
             div = 256//nb_colors
@@ -496,36 +517,36 @@ class GalaxyProcessor(object):
             return d_img
 
         img = image.copy()
-        im_color=cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        im_color = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         img=self.crop_image(im_color, 212-80, 212+80)
-        (row, col, channels) = img.shape
-        # blur
+
+        # blur to eliminate slight variations between the adjacent pixels
         img = cv2.GaussianBlur(img, (3, 3), 0)
-        # quantize color
+        # quantize image into nb_colors
         img = quantize_color(img, nb_colors)
         bgr = cv2.split(img)
-        alpha = np.zeros(nb_colors)
-        beta = np.zeros(nb_colors)
+        coherent_pixels = np.zeros(nb_colors)
+        incoherent_pixels = np.zeros(nb_colors)
         # labeling
         for (i, ch) in enumerate(bgr):
             (ret, th) = cv2.threshold(ch, 127, 255, 0)
             (ret, labeled, stat, centroids) = cv2.connectedComponentsWithStats(th, None,cv2.CC_STAT_AREA, None, connectivity=8)
-            # generate ccv
+            # generate areas
             areas = [[v[4], label_idx] for (label_idx, v) in enumerate(stat)]
-            coord = [[v[0], v[1]] for (label_idx, v) in enumerate(stat)]
-            # Counting coherent and incoherent pixels
-            for (a, c) in zip(areas, coord):
-                area_size = a[0]
-                (x, y) = (c[0], c[1])
+            coords = [[v[0], v[1]] for (label_idx, v) in enumerate(stat)]
+            # Counting coherent and incoherent pixels over each area
+            for (area, coord) in zip(areas, coords):
+                area_size = area[0]
+                (x, y) = (coord[0], coord[1])
                 if x < ch.shape[1] and y < ch.shape[0]:
                     bin_idx = int(ch[y, x] // (256 // nb_colors))
                     if area_size >= threshold:
-                        # COHERENT PIXELS (belong to area > Threshold pixels )
-                        alpha[bin_idx]+= area_size
+                        # COHERENT PIXELS (belong to area >= Threshold pixels )
+                        coherent_pixels[bin_idx]+= area_size
                     else:
-                        # INCOHERENT PIXELS (belong to area <= Threshold pixels )
-                        beta[bin_idx]+= area_size
-        return (alpha, beta)
+                        # INCOHERENT PIXELS (belong to area < Threshold pixels )
+                        incoherent_pixels[bin_idx]+= area_size
+        return [coherent_pixels, incoherent_pixels]
 
     def get_ratio_aspect(self, image):
         """
