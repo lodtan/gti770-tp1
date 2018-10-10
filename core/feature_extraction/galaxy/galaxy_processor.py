@@ -588,7 +588,7 @@ class GalaxyProcessor(object):
         kernel = np.ones((3,3),np.uint8)
         dilation = cv2.dilate(thresh,kernel,iterations = 1)
         # Get moment to calculate area
-        img2, contours, hierarchy = cv2.findContours(dilation, 1, 2)
+        img2, contours, hierarchy = cv2.findContours(dilation, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
         contour = max(contours, key = lambda cnt : len(cnt))
         area = cv2.moments(contour)['m00']
         #Get perimeter :
