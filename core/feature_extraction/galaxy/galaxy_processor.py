@@ -573,7 +573,7 @@ class GalaxyProcessor(object):
         """calculateCircularity
         Fonction calculant la circularité d'une image de galaxie grâce à la fonction C = 4pi * A/P2.
         Args:
-            img (int): L'image pour laquelle nous voulons calculer la circularité.
+            img: L'image pour laquelle nous voulons calculer la circularité.
         Returns:
             circularity: La valeur de retour. Elle est définie entre 0 et 1.
                         Plus la valeur est proche de 1, plus la galaxie est circulaire.
